@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, User, Tag, Building2, Send, Paperclip, Edit, Trash2, CalendarCheck, CalendarDays, CheckCircle } from 'lucide-react';
+import { ArrowRight, User, Tag, Building2, Send, Paperclip, Edit, Trash2, CalendarCheck, CalendarDays, CheckCircle, Bell } from 'lucide-react';
 import { DataService } from '../services/dataService';
 import { Topic, Followup, TopicStatus } from '../types';
+import { TelegramService } from '../services/telegramService';
 
 export const TopicDetail: React.FC = () => {
   const { id } = useParams();
@@ -16,6 +17,7 @@ export const TopicDetail: React.FC = () => {
   const [newNote, setNewNote] = useState('');
   const [newResult, setNewResult] = useState('');
   const [progressLevel, setProgressLevel] = useState('جيد');
+  const [sendingTelegram, setSendingTelegram] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -59,6 +61,18 @@ export const TopicDetail: React.FC = () => {
               navigate('/topics');
           }
       }
+  };
+
+  const handleSendReminder = async () => {
+      if(!topic) return;
+      if(!window.confirm('إرسال تذكير عبر تيليجرام للإدارة المعنية؟')) return;
+      
+      setSendingTelegram(true);
+      const success = await TelegramService.sendTaskNotification(topic, 'reminder');
+      setSendingTelegram(false);
+      
+      if(success) alert('تم إرسال التذكير بنجاح');
+      else alert('فشل الإرسال. تأكد من إعدادات تيليجرام.');
   };
 
   const getStatusColorClass = (s: TopicStatus) => {
@@ -107,6 +121,14 @@ export const TopicDetail: React.FC = () => {
         </button>
         
         <div className="flex gap-2">
+            <button 
+                onClick={handleSendReminder}
+                disabled={sendingTelegram}
+                className="flex items-center gap-2 px-4 py-2 text-sky-600 bg-white border border-sky-200 rounded-lg hover:bg-sky-50 transition-colors shadow-sm disabled:opacity-50"
+            >
+                <Bell className="w-4 h-4" />
+                <span>{sendingTelegram ? 'جاري الإرسال...' : 'تذكير تيليجرام'}</span>
+            </button>
             <button 
                 onClick={() => navigate(`/topics/edit/${topic.id}`)}
                 className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors shadow-sm"

@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { DataService } from '../services/dataService';
 import { PriorityLevel, TopicStatus, Topic } from '../types';
 import { X, Save } from 'lucide-react';
+import { TelegramService } from '../services/telegramService';
 
 export const NewTopicModal: React.FC = () => {
   const navigate = useNavigate();
@@ -34,11 +35,13 @@ export const NewTopicModal: React.FC = () => {
     }
   }, [id, isEditMode, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isEditMode && id) {
         const updates = { ...formData };
+        
+        // Logic: If Closed, ensure closingDate is set. If not Closed, clear it.
         if (updates.status === TopicStatus.Closed && !updates.closingDate) {
             updates.closingDate = new Date().toISOString().split('T')[0];
         } else if (updates.status !== TopicStatus.Closed) {
@@ -47,11 +50,14 @@ export const NewTopicModal: React.FC = () => {
         
         DataService.updateTopic(Number(id), updates);
     } else {
-        DataService.addTopic({
+        const newTopic = DataService.addTopic({
             ...(formData as any),
             status: TopicStatus.Pending,
             createdBy: DataService.getCurrentUser().id
         });
+        
+        // Send Notification
+        await TelegramService.sendTaskNotification(newTopic, 'new');
     }
     navigate('/topics');
   };
@@ -152,7 +158,15 @@ export const NewTopicModal: React.FC = () => {
                     </div>
                     <div>
                          <label className="block text-sm font-medium text-slate-700 mb-1">تاريخ الإغلاق</label>
-                         <input type="date" name="closingDate" className="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50" value={formData.closingDate || ''} readOnly={true} title="يتم تحديده تلقائياً عند الإنجاز" />
+                         <input 
+                            type="date" 
+                            name="closingDate" 
+                            className={`w-full p-2.5 border border-slate-200 rounded-lg ${formData.status !== TopicStatus.Closed ? 'bg-slate-100 text-slate-400' : 'bg-white'}`}
+                            value={formData.closingDate || ''} 
+                            onChange={handleChange}
+                            readOnly={formData.status !== TopicStatus.Closed}
+                            title={formData.status !== TopicStatus.Closed ? "يتم تفعيله عند اختيار الحالة: مغلقة" : "تاريخ الإغلاق الفعلي"} 
+                        />
                     </div>
                     </>
                 )}

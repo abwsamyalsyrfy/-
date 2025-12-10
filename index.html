@@ -4,12 +4,39 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GoalTrack Pro</title>
+    
+    <!-- تحميل خط تجوال من جوجل لضمان الظهور بشكل صحيح واحترافي -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+      /* إعدادات الخط الشاملة */
       body {
         font-family: 'Tajawal', sans-serif;
         background-color: #f3f4f6;
+        font-size: 16px; /* حجم قياسي مريح للعين مع خط تجوال */
+      }
+      
+      /* تحسين العناوين */
+      h1, h2, h3, h4, h5, h6 {
+        font-weight: 800; /* خط سميك للعناوين */
+      }
+
+      /* تحسين جداول البيانات */
+      th {
+        font-weight: 800 !important;
+        font-size: 15px;
+      }
+      td {
+        font-weight: 500;
+        font-size: 15px;
+      }
+      
+      /* تحسين الأزرار */
+      button {
+        font-weight: 700;
       }
     </style>
   <script type="importmap">
@@ -30,5 +57,6 @@
 </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

@@ -44,15 +44,15 @@ export const TopicList: React.FC = () => {
 
   const getStatusColor = (s: TopicStatus) => {
     switch (s) {
-      case TopicStatus.Closed: return 'text-green-600 bg-green-50 border-green-200';
-      case TopicStatus.Ongoing: return 'text-blue-600 bg-blue-50 border-blue-200';
-      case TopicStatus.Pending: return 'text-sky-600 bg-sky-50 border-sky-200';
-      case TopicStatus.Phased: return 'text-purple-600 bg-purple-50 border-purple-200';
-      case TopicStatus.Postponed: return 'text-orange-600 bg-orange-50 border-orange-200';
-      case TopicStatus.Overdue: return 'text-red-600 bg-red-50 border-red-200';
-      case TopicStatus.Stalled: return 'text-stone-600 bg-stone-100 border-stone-300'; // New Color
-      case TopicStatus.Cancelled: return 'text-slate-500 bg-slate-50 border-slate-200';
-      default: return 'text-slate-600 bg-slate-50 border-slate-200';
+      case TopicStatus.Closed: return 'text-green-800 bg-green-100 border-green-300';
+      case TopicStatus.Ongoing: return 'text-blue-800 bg-blue-100 border-blue-300';
+      case TopicStatus.Pending: return 'text-sky-800 bg-sky-100 border-sky-300';
+      case TopicStatus.Phased: return 'text-purple-800 bg-purple-100 border-purple-300';
+      case TopicStatus.Postponed: return 'text-orange-800 bg-orange-100 border-orange-300';
+      case TopicStatus.Overdue: return 'text-red-800 bg-red-100 border-red-300';
+      case TopicStatus.Stalled: return 'text-stone-800 bg-stone-200 border-stone-400';
+      case TopicStatus.Cancelled: return 'text-slate-600 bg-slate-200 border-slate-300';
+      default: return 'text-slate-700 bg-slate-100 border-slate-200';
     }
   };
 
@@ -83,24 +83,24 @@ export const TopicList: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col h-[calc(100vh-2rem)]">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-[calc(100vh-6rem)] md:h-[calc(100vh-2rem)]">
       {/* Header */}
-      <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="p-4 md:p-6 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">سجل الأهداف والمواضيع</h2>
-          <p className="text-sm text-slate-500 mt-1">إدارة ومتابعة كافة المهام الواردة للإدارات</p>
+          <h2 className="text-xl md:text-2xl font-bold text-slate-800">سجل الأهداف والمواضيع</h2>
+          <p className="text-sm md:text-base text-slate-600 mt-1">إدارة ومتابعة كافة المهام الواردة للإدارات</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
             <button 
                 onClick={exportToCSV}
-                className="flex items-center gap-2 px-4 py-2 text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors font-bold text-sm"
             >
                 <Download className="w-4 h-4" />
-                <span>تصدير</span>
+                <span>تصدير Excel</span>
             </button>
             <button 
                 onClick={() => navigate('/topics/new')}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors shadow-sm font-bold text-sm"
             >
                 <Plus className="w-4 h-4" />
                 <span>موضوع جديد</span>
@@ -109,21 +109,21 @@ export const TopicList: React.FC = () => {
       </div>
 
       {/* Toolbar */}
-      <div className="p-4 bg-slate-50 border-b border-slate-100 flex flex-col md:flex-row gap-4">
+      <div className="p-4 bg-white border-b border-slate-200 flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input 
             type="text" 
             placeholder="بحث في المهمة، التفاصيل، أو المرسل..." 
-            className="w-full pl-4 pr-10 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-4 pr-12 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base md:text-lg"
             value={filterText}
             onChange={(e) => setFilterText(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2 min-w-[200px]">
-            <Filter className="w-4 h-4 text-slate-500" />
+        <div className="flex items-center gap-2 md:min-w-[250px]">
+            <Filter className="w-5 h-5 text-slate-500" />
             <select 
-                className="w-full p-2 border border-slate-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 border border-slate-300 rounded-lg bg-white text-base focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -141,67 +141,66 @@ export const TopicList: React.FC = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="flex-1 overflow-auto">
-        <table className="w-full text-right border-collapse">
-          <thead className="bg-slate-50 text-slate-700 text-xs font-bold sticky top-0 z-10 shadow-sm">
-            <tr>
-              <th className="p-3 border-b whitespace-nowrap">معرف الموضوع</th>
-              <th className="p-3 border-b min-w-[200px]">المهمة</th>
-              <th className="p-3 border-b whitespace-nowrap">المعني بالتنفيذ</th>
-              <th className="p-3 border-b whitespace-nowrap">تاريخ التكليف</th>
-              <th className="p-3 border-b whitespace-nowrap">موعد التسليم</th>
-              <th className="p-3 border-b whitespace-nowrap">الحالة</th>
-              <th className="p-3 border-b min-w-[250px]">التفاصيل</th>
-              <th className="p-3 border-b whitespace-nowrap">تاريخ الإغلاق</th>
-              <th className="p-3 border-b"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 text-sm">
-            {filteredTopics.map((topic) => {
-                const deptName = departments.find(d => d.id === topic.deptId)?.name || 'غير محدد';
-                const today = new Date().toISOString().split('T')[0];
-                const isOverdue = topic.dueDate < today && topic.status !== TopicStatus.Closed && topic.status !== TopicStatus.Cancelled && topic.status !== TopicStatus.Overdue;
+      {/* Table - Responsive Container */}
+      <div className="flex-1 overflow-auto bg-slate-50">
+        <div className="min-w-[1000px] md:min-w-full">
+            <table className="w-full text-right border-collapse">
+            <thead className="bg-slate-100 text-slate-800 text-lg font-extrabold sticky top-0 z-10 shadow-sm border-b-2 border-slate-300">
+                <tr>
+                <th className="p-4 whitespace-nowrap w-20">#</th>
+                <th className="p-4 w-[45%]">المهمة (الموضوع)</th>
+                <th className="p-4 whitespace-nowrap">المعني بالتنفيذ</th>
+                <th className="p-4 whitespace-nowrap">تاريخ التكليف</th>
+                <th className="p-4 whitespace-nowrap">موعد التسليم</th>
+                <th className="p-4 whitespace-nowrap">الحالة</th>
+                <th className="p-4 whitespace-nowrap">تاريخ الإغلاق</th>
+                <th className="p-4"></th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 text-lg">
+                {filteredTopics.map((topic) => {
+                    const deptName = departments.find(d => d.id === topic.deptId)?.name || 'غير محدد';
+                    const today = new Date().toISOString().split('T')[0];
+                    const isOverdue = topic.dueDate < today && topic.status !== TopicStatus.Closed && topic.status !== TopicStatus.Cancelled && topic.status !== TopicStatus.Overdue;
 
-                return (
-                    <tr 
-                        key={topic.id} 
-                        onClick={() => navigate(`/topics/${topic.id}`)}
-                        className="hover:bg-blue-50 transition-colors cursor-pointer group"
-                    >
-                        <td className="p-3 text-slate-500 font-mono">{topic.id}</td>
-                        <td className="p-3 font-semibold text-slate-800">{topic.title}</td>
-                        <td className="p-3 text-slate-600">{deptName}</td>
-                        <td className="p-3 text-slate-600 dir-ltr text-right">{topic.assignmentDate}</td>
-                        <td className={`p-3 dir-ltr text-right font-medium ${isOverdue ? 'text-red-600' : 'text-slate-600'}`}>
-                            {topic.dueDate}
-                            {isOverdue && <span className="mr-2 text-xs text-red-500">!</span>}
-                        </td>
-                        <td className="p-3">
-                            <span className={`px-2 py-1 rounded text-xs border ${getStatusColor(topic.status)}`}>
-                                {topic.status}
-                            </span>
-                        </td>
-                        <td className="p-3 text-slate-500 text-xs leading-relaxed max-w-xs">
-                           <div className="line-clamp-2" title={topic.details}>
-                             {topic.details}
-                           </div>
-                        </td>
-                        <td className="p-3 text-slate-500 dir-ltr text-right">
-                            {topic.closingDate || '-'}
-                        </td>
-                        <td className="p-3 text-center">
-                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500" />
-                        </td>
-                    </tr>
-                );
-            })}
-          </tbody>
-        </table>
+                    return (
+                        <tr 
+                            key={topic.id} 
+                            onClick={() => navigate(`/topics/${topic.id}`)}
+                            className="hover:bg-blue-50 transition-colors cursor-pointer group odd:bg-white even:bg-slate-50"
+                        >
+                            <td className="p-4 text-slate-500 font-mono text-base">{topic.id}</td>
+                            <td className="p-4 font-bold text-slate-900 text-justify leading-relaxed">
+                                {topic.title}
+                                <div className="text-sm text-slate-500 font-normal mt-1 truncate max-w-md">{topic.details}</div>
+                            </td>
+                            <td className="p-4 text-slate-700 font-medium">{deptName}</td>
+                            <td className="p-4 text-slate-600 dir-ltr text-right font-mono">{topic.assignmentDate}</td>
+                            <td className={`p-4 dir-ltr text-right font-mono font-bold ${isOverdue ? 'text-red-700' : 'text-slate-700'}`}>
+                                {topic.dueDate}
+                                {isOverdue && <span className="mr-2 text-sm text-red-600 font-bold">(متأخر)</span>}
+                            </td>
+                            <td className="p-4">
+                                <span className={`px-3 py-1 rounded-md text-base border font-bold whitespace-nowrap ${getStatusColor(topic.status)}`}>
+                                    {topic.status}
+                                </span>
+                            </td>
+                            <td className="p-4 text-slate-600 dir-ltr text-right font-mono">
+                                {topic.closingDate || '-'}
+                            </td>
+                            <td className="p-4 text-center">
+                                <ChevronRight className="w-6 h-6 text-slate-300 group-hover:text-blue-600" />
+                            </td>
+                        </tr>
+                    );
+                })}
+            </tbody>
+            </table>
+        </div>
         {filteredTopics.length === 0 && (
             <div className="flex flex-col items-center justify-center h-48 text-slate-400">
-                <Search className="w-8 h-8 mb-2 opacity-50" />
-                <p>لا توجد بيانات للعرض</p>
+                <Search className="w-12 h-12 mb-4 opacity-30" />
+                <p className="text-xl font-medium">لا توجد بيانات للعرض</p>
             </div>
         )}
       </div>

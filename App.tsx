@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListTodo, PlusCircle, Settings, LogOut, Menu, UploadCloud, BookOpen, FileText } from 'lucide-react';
+import { LayoutDashboard, ListTodo, PlusCircle, Settings, LogOut, Menu, UploadCloud, BookOpen, FileText, BarChart2, X } from 'lucide-react';
 import { Dashboard } from './components/Dashboard';
 import { TopicList } from './components/TopicList';
 import { TopicDetail } from './components/TopicDetail';
@@ -10,14 +10,16 @@ import { ImportData } from './components/ImportData';
 import { Settings as SettingsPage } from './components/Settings';
 import { UserGuide } from './components/UserGuide';
 import { DailyReport } from './components/DailyReport';
+import { PerformanceAnalysis } from './components/PerformanceAnalysis';
 
-const SidebarLink = ({ to, icon: Icon, label }: any) => {
+const SidebarLink = ({ to, icon: Icon, label, onClick }: any) => {
   const location = useLocation();
   const isActive = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
   
   return (
     <Link 
       to={to} 
+      onClick={onClick}
       className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
         isActive 
           ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
@@ -31,56 +33,91 @@ const SidebarLink = ({ to, icon: Icon, label }: any) => {
 };
 
 export default function App() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  const closeMenu = () => setIsMobileMenuOpen(false);
+
+  const SidebarContent = () => (
+    <>
+      <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">G</span>
+          </div>
+          <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">GoalTrack</h1>
+        </div>
+        {/* Close button only visible on mobile inside the drawer */}
+        <button onClick={closeMenu} className="md:hidden p-1 text-slate-500 hover:bg-slate-100 rounded-full">
+          <X className="w-6 h-6" />
+        </button>
+      </div>
+      
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <SidebarLink to="/" icon={LayoutDashboard} label="لوحة التحكم" onClick={closeMenu} />
+        <SidebarLink to="/topics" icon={ListTodo} label="إدارة الأهداف" onClick={closeMenu} />
+        <SidebarLink to="/topics/new" icon={PlusCircle} label="موضوع جديد" onClick={closeMenu} />
+        <SidebarLink to="/analysis" icon={BarChart2} label="تحليل الأداء" onClick={closeMenu} />
+        <SidebarLink to="/daily-report" icon={FileText} label="التقرير اليومي" onClick={closeMenu} />
+        <SidebarLink to="/import" icon={UploadCloud} label="استيراد بيانات" onClick={closeMenu} />
+        <SidebarLink to="/guide" icon={BookOpen} label="دليل الاستخدام" onClick={closeMenu} />
+        <SidebarLink to="/settings" icon={Settings} label="الإعدادات والصلاحيات" onClick={closeMenu} />
+      </nav>
+
+      <div className="p-4 border-t border-slate-100">
+        <button className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-red-600 w-full transition-colors">
+          <LogOut className="w-5 h-5" />
+          <span>تسجيل خروج</span>
+        </button>
+        <div className="mt-4 flex items-center gap-3 px-4">
+            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold">
+                م
+            </div>
+            <div>
+                <p className="text-sm font-semibold text-slate-700">مدير النظام</p>
+                <p className="text-xs text-slate-400">الإدارة العامة</p>
+            </div>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <Router>
       <div className="flex h-screen bg-[#f8fafc] overflow-hidden font-sans">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white border-l border-slate-200 hidden md:flex flex-col shadow-sm z-10">
-          <div className="p-6 border-b border-slate-100 flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">G</span>
-            </div>
-            <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">GoalTrack</h1>
-          </div>
-          
-          <nav className="flex-1 p-4 space-y-2">
-            <SidebarLink to="/" icon={LayoutDashboard} label="لوحة التحكم" />
-            <SidebarLink to="/topics" icon={ListTodo} label="إدارة الأهداف" />
-            <SidebarLink to="/topics/new" icon={PlusCircle} label="موضوع جديد" />
-            <SidebarLink to="/daily-report" icon={FileText} label="التقرير اليومي" />
-            <SidebarLink to="/import" icon={UploadCloud} label="استيراد بيانات" />
-            <SidebarLink to="/guide" icon={BookOpen} label="دليل الاستخدام" />
-            <SidebarLink to="/settings" icon={Settings} label="الإعدادات والصلاحيات" />
-          </nav>
-
-          <div className="p-4 border-t border-slate-100">
-            <button className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-red-600 w-full transition-colors">
-              <LogOut className="w-5 h-5" />
-              <span>تسجيل خروج</span>
-            </button>
-            <div className="mt-4 flex items-center gap-3 px-4">
-                <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold">
-                    م
-                </div>
-                <div>
-                    <p className="text-sm font-semibold text-slate-700">مدير النظام</p>
-                    <p className="text-xs text-slate-400">الإدارة العامة</p>
-                </div>
-            </div>
-          </div>
+        
+        {/* Desktop Sidebar */}
+        <aside className="w-64 bg-white border-l border-slate-200 hidden md:flex flex-col shadow-sm z-30">
+          <SidebarContent />
         </aside>
 
+        {/* Mobile Sidebar Overlay & Drawer */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-40 md:hidden">
+            {/* Backdrop */}
+            <div 
+              className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+              onClick={closeMenu}
+            ></div>
+            
+            {/* Drawer Panel */}
+            <aside className="absolute top-0 right-0 w-72 h-full bg-white shadow-2xl flex flex-col transition-transform duration-300 transform translate-x-0">
+              <SidebarContent />
+            </aside>
+          </div>
+        )}
+
         {/* Main Content */}
-        <main className="flex-1 overflow-auto relative">
+        <main className="flex-1 overflow-auto relative w-full">
           {/* Mobile Header */}
-          <div className="md:hidden p-4 bg-white shadow-sm flex items-center justify-between sticky top-0 z-20">
+          <div className="md:hidden p-4 bg-white shadow-sm flex items-center justify-between sticky top-0 z-20 border-b border-slate-200">
              <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                     <span className="text-white font-bold">G</span>
                 </div>
                 <h1 className="font-bold text-slate-800">GoalTrack</h1>
              </div>
-             <button className="p-2">
+             <button onClick={toggleMenu} className="p-2 active:bg-slate-100 rounded-lg transition-colors">
                 <Menu className="w-6 h-6 text-slate-600" />
              </button>
           </div>
@@ -92,6 +129,7 @@ export default function App() {
               <Route path="/topics/new" element={<NewTopicModal />} />
               <Route path="/topics/edit/:id" element={<NewTopicModal />} />
               <Route path="/topics/:id" element={<TopicDetail />} />
+              <Route path="/analysis" element={<PerformanceAnalysis />} />
               <Route path="/daily-report" element={<DailyReport />} />
               <Route path="/import" element={<ImportData />} />
               <Route path="/guide" element={<UserGuide />} />

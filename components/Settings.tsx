@@ -1,13 +1,16 @@
+
 import React, { useState } from 'react';
 import { DataService } from '../services/dataService';
 import { User, UserRole } from '../types';
-import { Trash2, Edit2, Check, X, Shield, RefreshCw } from 'lucide-react';
+import { Trash2, Edit2, Shield, RefreshCw, Send, Save } from 'lucide-react';
+import { TelegramService } from '../services/telegramService';
 
 export const Settings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'system'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'system' | 'telegram'>('users');
   const [users, setUsers] = useState<User[]>(DataService.getUsers());
   const [editingId, setEditingId] = useState<number | null>(null);
-  const departments = DataService.getDepartments();
+  const [departments, setDepartments] = useState(DataService.getDepartments());
+  const [telegramToken, setTelegramToken] = useState(DataService.getTelegramToken());
   
   // New User Form State
   const [newUser, setNewUser] = useState({
@@ -53,23 +56,48 @@ export const Settings: React.FC = () => {
       }
   };
 
+  const handleSaveTelegramToken = () => {
+      DataService.setTelegramToken(telegramToken);
+      alert('تم حفظ توكن البوت بنجاح');
+  };
+
+  const handleUpdateChatId = (deptId: number, chatId: string) => {
+      DataService.updateDepartment(deptId, { telegramChatId: chatId });
+      setDepartments(DataService.getDepartments());
+  };
+
+  const handleTestTelegram = async (chatId: string) => {
+      if(!chatId) return alert('ادخل معرف المحادثة أولاً');
+      const success = await TelegramService.sendMessage(chatId, '🔔 رسالة تجريبية من نظام GoalTrack');
+      if(success) alert('تم الإرسال بنجاح!');
+      else alert('فشل الإرسال. تأكد من التوكن ومعرف المحادثة وأن البوت مضاف للمجموعة.');
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-slate-800">إعدادات النظام</h1>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200">
+      <div className="flex border-b border-slate-200 overflow-x-auto">
         <button
           onClick={() => setActiveTab('users')}
-          className={`px-6 py-3 font-medium text-sm transition-colors ${
+          className={`px-6 py-3 font-medium text-sm transition-colors whitespace-nowrap ${
             activeTab === 'users' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-slate-500'
           }`}
         >
-          إدارة المستخدمين والصلاحيات
+          إدارة المستخدمين
+        </button>
+        <button
+          onClick={() => setActiveTab('telegram')}
+          className={`px-6 py-3 font-medium text-sm transition-colors whitespace-nowrap ${
+            activeTab === 'telegram' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-slate-500'
+          }`}
+        >
+          إعدادات تيليجرام
         </button>
         <button
           onClick={() => setActiveTab('system')}
-          className={`px-6 py-3 font-medium text-sm transition-colors ${
+          className={`px-6 py-3 font-medium text-sm transition-colors whitespace-nowrap ${
             activeTab === 'system' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-slate-500'
           }`}
         >
@@ -189,6 +217,77 @@ export const Settings: React.FC = () => {
                 </form>
             </div>
         </div>
+      )}
+
+      {activeTab === 'telegram' && (
+          <div className="space-y-6">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                  <h3 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                      <Send className="w-5 h-5 text-blue-600" />
+                      إعدادات البوت
+                  </h3>
+                  <div className="flex gap-3 items-end">
+                      <div className="flex-1">
+                          <label className="block text-sm text-slate-600 mb-1">Telegram Bot Token</label>
+                          <input 
+                            type="text" 
+                            className="w-full p-2 border rounded-lg bg-slate-50 font-mono text-sm"
+                            placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxyz"
+                            value={telegramToken}
+                            onChange={(e) => setTelegramToken(e.target.value)}
+                          />
+                      </div>
+                      <button onClick={handleSaveTelegramToken} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                          <Save className="w-4 h-4" />
+                          حفظ التوكن
+                      </button>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2">
+                      يمكنك الحصول على التوكن من خلال التحدث مع @BotFather على تيليجرام.
+                  </p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                  <h3 className="font-bold text-lg text-slate-800 mb-4">ربط الإدارات</h3>
+                  <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-right">
+                          <thead className="bg-slate-50 text-slate-500">
+                              <tr>
+                                  <th className="p-3">الإدارة</th>
+                                  <th className="p-3 w-96">Chat ID (معرف المجموعة/المستخدم)</th>
+                                  <th className="p-3">اختبار</th>
+                              </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                              {departments.map(dept => (
+                                  <tr key={dept.id} className="hover:bg-slate-50">
+                                      <td className="p-3 font-medium">{dept.name}</td>
+                                      <td className="p-3">
+                                          <input 
+                                            className="w-full p-1 border rounded text-xs font-mono" 
+                                            placeholder="-100123456789"
+                                            value={dept.telegramChatId || ''}
+                                            onChange={(e) => handleUpdateChatId(dept.id, e.target.value)}
+                                          />
+                                      </td>
+                                      <td className="p-3">
+                                          <button 
+                                            onClick={() => handleTestTelegram(dept.telegramChatId || '')}
+                                            className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600 hover:bg-blue-100 hover:text-blue-600"
+                                          >
+                                              إرسال تجربة
+                                          </button>
+                                      </td>
+                                  </tr>
+                              ))}
+                          </tbody>
+                      </table>
+                  </div>
+                  <div className="mt-4 p-3 bg-blue-50 text-blue-800 text-xs rounded-lg">
+                      <strong>ملاحظة:</strong> لمعرفة Chat ID، قم بإضافة البوت للمجموعة ثم استخدم بوت آخر مثل @userinfobot أو @getidsbot. تأكد من إعطاء البوت صلاحية إرسال الرسائل.
+                  </div>
+              </div>
+          </div>
       )}
 
       {activeTab === 'system' && (

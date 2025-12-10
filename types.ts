@@ -27,6 +27,7 @@ export interface Department {
   id: number;
   name: string;
   email: string;
+  telegramChatId?: string; // New field for Telegram integration
 }
 
 export interface User {

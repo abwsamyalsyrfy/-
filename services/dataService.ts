@@ -3,10 +3,10 @@ import { Topic, Followup, Department, User, TopicStatus, UserRole } from '../typ
 
 // Initial default departments
 let departments: Department[] = [
-  { id: 1, name: 'الإدارة العامة', email: 'admin@company.com' },
-  { id: 2, name: 'قسم التطوير', email: 'dev@company.com' },
-  { id: 3, name: 'قسم الدعم الفني', email: 'support@company.com' },
-  { id: 4, name: 'الموارد البشرية', email: 'hr@company.com' },
+  { id: 1, name: 'الإدارة العامة', email: 'admin@company.com', telegramChatId: '' },
+  { id: 2, name: 'قسم التطوير', email: 'dev@company.com', telegramChatId: '' },
+  { id: 3, name: 'قسم الدعم الفني', email: 'support@company.com', telegramChatId: '' },
+  { id: 4, name: 'الموارد البشرية', email: 'hr@company.com', telegramChatId: '' },
 ];
 
 // Initial Users
@@ -18,7 +18,8 @@ let users: User[] = [
 const STORAGE_KEYS = {
   TOPICS: 'goaltrack_topics',
   FOLLOWUPS: 'goaltrack_followups',
-  DEPTS: 'goaltrack_depts'
+  DEPTS: 'goaltrack_depts',
+  TELEGRAM_TOKEN: 'goaltrack_telegram_token'
 };
 
 const loadFromStorage = (key: string, defaultVal: any[]) => {
@@ -42,8 +43,18 @@ if (storedDepts) {
 let currentUser: User = users[0];
 
 export const DataService = {
+  // --- TELEGRAM SETTINGS ---
+  getTelegramToken: () => localStorage.getItem(STORAGE_KEYS.TELEGRAM_TOKEN) || '',
+  
+  setTelegramToken: (token: string) => localStorage.setItem(STORAGE_KEYS.TELEGRAM_TOKEN, token),
+
   // --- DEPARTMENTS (Dynamic) ---
   getDepartments: () => [...departments],
+  
+  updateDepartment: (id: number, data: Partial<Department>) => {
+      departments = departments.map(d => d.id === id ? { ...d, ...data } : d);
+      saveToStorage(STORAGE_KEYS.DEPTS, departments);
+  },
   
   resolveDepartment: (name: string): number => {
       if (!name) return 1; 
