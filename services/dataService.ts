@@ -1,5 +1,6 @@
 
-import { Topic, Followup, Department, User, TopicStatus, UserRole } from '../types';
+
+import { Topic, Followup, Department, User, TopicStatus, UserRole, LogEntry } from '../types';
 
 // Initial default departments
 let departments: Department[] = [
@@ -10,43 +11,122 @@ let departments: Department[] = [
 ];
 
 // Initial Users
-let users: User[] = [
+const DEFAULT_USERS: User[] = [
   { id: 1, name: 'مدير النظام', email: 'admin@company.com', role: UserRole.Admin, isActive: true, deptId: 1 },
 ];
+let users: User[] = [...DEFAULT_USERS];
 
 // --- LOCAL STORAGE HELPERS ---
 const STORAGE_KEYS = {
   TOPICS: 'goaltrack_topics',
   FOLLOWUPS: 'goaltrack_followups',
   DEPTS: 'goaltrack_depts',
-  TELEGRAM_TOKEN: 'goaltrack_telegram_token'
+  USERS: 'goaltrack_users',
+  TELEGRAM_TOKEN: 'goaltrack_telegram_token',
+  CURRENT_USER: 'goaltrack_current_user_id',
+  LOGS: 'goaltrack_audit_logs'
 };
 
 const loadFromStorage = (key: string, defaultVal: any[]) => {
   const stored = localStorage.getItem(key);
-  return stored ? JSON.parse(stored) : defaultVal;
+  try {
+      return stored ? JSON.parse(stored) : defaultVal;
+  } catch (e) {
+      return defaultVal;
+  }
 };
 
 const saveToStorage = (key: string, data: any[]) => {
   localStorage.setItem(key, JSON.stringify(data));
 };
 
-// LOAD DATA (Starts Empty if no local storage)
+// LOAD DATA
 let topics: Topic[] = loadFromStorage(STORAGE_KEYS.TOPICS, []);
 let followups: Followup[] = loadFromStorage(STORAGE_KEYS.FOLLOWUPS, []);
-// Load depts from storage if exist, else use defaults
+let auditLogs: LogEntry[] = loadFromStorage(STORAGE_KEYS.LOGS, []);
+
+// Load depts
 let storedDepts = localStorage.getItem(STORAGE_KEYS.DEPTS);
 if (storedDepts) {
-    departments = JSON.parse(storedDepts);
+    try {
+        departments = JSON.parse(storedDepts);
+    } catch(e) {}
 }
 
-let currentUser: User = users[0];
+// Load users safely
+let storedUsers = localStorage.getItem(STORAGE_KEYS.USERS);
+if (storedUsers) {
+    try {
+        const parsedUsers = JSON.parse(storedUsers);
+        if (Array.isArray(parsedUsers) && parsedUsers.length > 0) {
+            users = parsedUsers;
+        }
+    } catch(e) {}
+}
+
+// Load Session
+let currentUser: User | null = null;
+const storedUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+if (storedUserId) {
+    currentUser = users.find(u => u.id === parseInt(storedUserId)) || null;
+}
 
 export const DataService = {
+  // --- LOGGING ---
+  logAction: (action: string, details: string) => {
+      const entry: LogEntry = {
+          id: Math.random().toString(36).substr(2, 9),
+          action,
+          details,
+          userId: currentUser ? currentUser.id : 0,
+          userName: currentUser ? currentUser.name : 'System',
+          timestamp: new Date().toISOString()
+      };
+      // Keep only last 500 logs to save space
+      auditLogs = [entry, ...auditLogs].slice(0, 500);
+      saveToStorage(STORAGE_KEYS.LOGS, auditLogs);
+  },
+
+  getLogs: () => [...auditLogs],
+  
+  clearLogs: () => {
+      auditLogs = [];
+      saveToStorage(STORAGE_KEYS.LOGS, []);
+  },
+
+  // --- AUTHENTICATION ---
+  isAuthenticated: () => !!currentUser,
+
+  login: (userId: number): boolean => {
+      const user = users.find(u => u.id === userId);
+      if (user) {
+          currentUser = user;
+          localStorage.setItem(STORAGE_KEYS.CURRENT_USER, userId.toString());
+          DataService.logAction('تسجيل دخول', `المستخدم: ${user.name}`);
+          return true;
+      }
+      return false;
+  },
+
+  logout: () => {
+      if (currentUser) {
+          DataService.logAction('تسجيل خروج', `المستخدم: ${currentUser.name}`);
+      }
+      currentUser = null;
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+  },
+
+  getCurrentUser: (): User => {
+      return currentUser || users[0];
+  },
+
   // --- TELEGRAM SETTINGS ---
   getTelegramToken: () => localStorage.getItem(STORAGE_KEYS.TELEGRAM_TOKEN) || '',
   
-  setTelegramToken: (token: string) => localStorage.setItem(STORAGE_KEYS.TELEGRAM_TOKEN, token),
+  setTelegramToken: (token: string) => {
+      localStorage.setItem(STORAGE_KEYS.TELEGRAM_TOKEN, token);
+      DataService.logAction('تحديث إعدادات', 'تم تحديث توكن تيليجرام');
+  },
 
   // --- DEPARTMENTS (Dynamic) ---
   getDepartments: () => [...departments],
@@ -54,6 +134,7 @@ export const DataService = {
   updateDepartment: (id: number, data: Partial<Department>) => {
       departments = departments.map(d => d.id === id ? { ...d, ...data } : d);
       saveToStorage(STORAGE_KEYS.DEPTS, departments);
+      DataService.logAction('تحديث إدارة', `تحديث بيانات الإدارة رقم ${id}`);
   },
   
   resolveDepartment: (name: string): number => {
@@ -61,7 +142,7 @@ export const DataService = {
       
       const normalizedInput = name.trim();
       
-      const existing = departments.find(d => d.name.trim() === normalizedInput);
+      const existing = departments.find(d => d.name.trim().toLowerCase() === normalizedInput.toLowerCase());
       if (existing) return existing.id;
 
       const newId = Math.max(...departments.map(d => d.id), 0) + 1;
@@ -72,6 +153,7 @@ export const DataService = {
       };
       departments.push(newDept);
       saveToStorage(STORAGE_KEYS.DEPTS, departments);
+      DataService.logAction('إضافة إدارة', `إضافة إدارة جديدة: ${normalizedInput}`);
       return newId;
   },
 
@@ -88,19 +170,24 @@ export const DataService = {
     };
     topics = [newTopic, ...topics];
     saveToStorage(STORAGE_KEYS.TOPICS, topics);
+    DataService.logAction('إضافة مهمة', `تم إضافة المهمة: ${newTopic.title}`);
     return newTopic;
   },
 
   updateTopic: (id: number, updatedData: Partial<Topic>) => {
+    const oldTopic = topics.find(t => t.id === id);
     topics = topics.map(t => t.id === id ? { ...t, ...updatedData, lastUpdated: new Date().toISOString().split('T')[0] } : t);
     saveToStorage(STORAGE_KEYS.TOPICS, topics);
+    DataService.logAction('تحديث مهمة', `تعديل المهمة #${id} - ${oldTopic?.title || ''}`);
   },
 
   deleteTopic: (id: number) => {
+    const t = topics.find(x => x.id === id);
     topics = topics.filter(t => t.id !== id);
     followups = followups.filter(f => f.topicId !== id); 
     saveToStorage(STORAGE_KEYS.TOPICS, topics);
     saveToStorage(STORAGE_KEYS.FOLLOWUPS, followups);
+    DataService.logAction('حذف مهمة', `تم حذف المهمة: ${t?.title || id}`);
   },
 
   updateTopicStatus: (id: number, status: TopicStatus) => {
@@ -108,11 +195,10 @@ export const DataService = {
     if (status === TopicStatus.Closed) {
         updates.closingDate = new Date().toISOString().split('T')[0];
     } else {
-        // If moved out of closed, clear the closing date? 
-        // Or keep it as history? Let's clear it to be accurate.
         updates.closingDate = undefined; 
     }
     DataService.updateTopic(id, updates);
+    DataService.logAction('تغيير حالة', `تغيير حالة المهمة #${id} إلى ${status}`);
   },
 
   // --- FOLLOWUPS ---
@@ -158,33 +244,83 @@ export const DataService = {
 
       DataService.updateTopicStatus(topic.id, newStatus);
     }
-
+    
+    DataService.logAction('إضافة متابعة', `متابعة للمهمة #${followup.topicId}`);
     return newFollowup;
   },
 
   // --- USERS ---
-  getUsers: () => [...users],
+  getUsers: () => {
+      if (users.length === 0) {
+          users = [...DEFAULT_USERS];
+          saveToStorage(STORAGE_KEYS.USERS, users);
+      }
+      return [...users];
+  },
   
   addUser: (user: Omit<User, 'id'>) => {
     const newUser = { ...user, id: Math.floor(Math.random() * 10000) };
     users = [...users, newUser];
+    saveToStorage(STORAGE_KEYS.USERS, users);
+    DataService.logAction('إضافة مستخدم', `تم إضافة المستخدم: ${user.name}`);
     return newUser;
   },
 
   updateUser: (id: number, data: Partial<User>) => {
     users = users.map(u => u.id === id ? { ...u, ...data } : u);
+    saveToStorage(STORAGE_KEYS.USERS, users);
+    DataService.logAction('تحديث مستخدم', `تحديث بيانات المستخدم #${id}`);
   },
 
   deleteUser: (id: number) => {
     if (id === 1) return;
+    const u = users.find(x => x.id === id);
     users = users.filter(u => u.id !== id);
+    saveToStorage(STORAGE_KEYS.USERS, users);
+    DataService.logAction('حذف مستخدم', `تم حذف المستخدم: ${u?.name || id}`);
   },
 
-  getCurrentUser: () => currentUser,
-  
-  setCurrentUser: (userId: number) => {
-    const user = users.find(u => u.id === userId);
-    if (user) currentUser = user;
+  // --- SYSTEM BACKUP & RESTORE ---
+  exportFullSystem: () => {
+    DataService.logAction('نسخ احتياطي', 'تم تصدير نسخة احتياطية للنظام');
+    return {
+      topics,
+      followups,
+      departments,
+      users,
+      auditLogs, // Include logs in backup
+      telegramToken: DataService.getTelegramToken(),
+      timestamp: new Date().toISOString(),
+      version: '2.1'
+    };
+  },
+
+  importFullSystem: (data: any) => {
+    if (!data || !data.topics || !data.users) return false;
+    
+    // Validate basic structure
+    if (!Array.isArray(data.topics) || !Array.isArray(data.users)) return false;
+
+    // Apply data
+    topics = data.topics;
+    followups = data.followups || [];
+    departments = data.departments || departments;
+    users = data.users;
+    auditLogs = data.auditLogs || [];
+    
+    if (data.telegramToken) {
+        DataService.setTelegramToken(data.telegramToken);
+    }
+
+    // Persist
+    saveToStorage(STORAGE_KEYS.TOPICS, topics);
+    saveToStorage(STORAGE_KEYS.FOLLOWUPS, followups);
+    saveToStorage(STORAGE_KEYS.DEPTS, departments);
+    saveToStorage(STORAGE_KEYS.USERS, users);
+    saveToStorage(STORAGE_KEYS.LOGS, auditLogs);
+    
+    DataService.logAction('استعادة نظام', 'تم استعادة النظام من نسخة احتياطية');
+    return true;
   },
 
   // --- UTILS ---
@@ -205,22 +341,34 @@ export const DataService = {
   },
 
   importData: (importedTopics: Topic[]) => {
-    // Avoid duplicates by ID if possible, or just append?
-    // Let's filter out IDs that already exist to be safe
     const existingIds = new Set(topics.map(t => t.id));
     const newTopics = importedTopics.filter(t => !existingIds.has(t.id));
     
     topics = [...newTopics, ...topics];
     saveToStorage(STORAGE_KEYS.TOPICS, topics);
+    DataService.logAction('استيراد بيانات', `تم استيراد ${newTopics.length} مهمة من ملف خارجي`);
     return topics.length;
   },
 
   resetSystem: () => {
+    DataService.logAction('إعادة ضبط', 'تم إعادة ضبط النظام للمصنع');
     topics = [];
     followups = [];
+    departments = [
+      { id: 1, name: 'الإدارة العامة', email: 'admin@company.com', telegramChatId: '' },
+      { id: 2, name: 'قسم التطوير', email: 'dev@company.com', telegramChatId: '' },
+      { id: 3, name: 'قسم الدعم الفني', email: 'support@company.com', telegramChatId: '' },
+      { id: 4, name: 'الموارد البشرية', email: 'hr@company.com', telegramChatId: '' },
+    ];
+    // Reset to just the admin user
+    users = [...DEFAULT_USERS];
+    auditLogs = [];
+
     localStorage.removeItem(STORAGE_KEYS.TOPICS);
     localStorage.removeItem(STORAGE_KEYS.FOLLOWUPS);
-    // keeping depts and users for now to avoid breaking UI completely, or reset them too?
-    // Let's reset topics/followups as requested
+    localStorage.removeItem(STORAGE_KEYS.DEPTS);
+    localStorage.removeItem(STORAGE_KEYS.USERS);
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+    localStorage.removeItem(STORAGE_KEYS.LOGS);
   }
 };

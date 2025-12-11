@@ -1,5 +1,7 @@
+
+
 import React from 'react';
-import { BookOpen, LayoutDashboard, PlusCircle, Settings, UploadCloud, ListTodo } from 'lucide-react';
+import { BookOpen, LayoutDashboard, PlusCircle, Settings, UploadCloud, ListTodo, Activity } from 'lucide-react';
 
 export const UserGuide: React.FC = () => {
   const Section = ({ title, icon: Icon, children }: any) => (
@@ -79,28 +81,34 @@ export const UserGuide: React.FC = () => {
         </p>
       </Section>
 
-      <Section title="استيراد البيانات والإعدادات" icon={UploadCloud}>
+      <Section title="استيراد البيانات والرقابة" icon={UploadCloud}>
         <p>
-          <strong>الاستيراد:</strong> يتيح لك النظام رفع ملفات Excel لإدخال كميات كبيرة من البيانات دفعة واحدة. تأكد من مطابقة أسماء الأعمدة (TopicID, Title, Priority...).
+          <strong>الاستيراد:</strong> يتيح لك النظام رفع ملفات Excel لإدخال كميات كبيرة من البيانات دفعة واحدة.
         </p>
         <div className="mt-4 border-t pt-4">
           <h3 className="font-bold text-slate-800 flex items-center gap-2">
-            <Settings className="w-4 h-4" />
-            الإعدادات والصلاحيات:
+            <Activity className="w-4 h-4" />
+            سجل النشاطات (Audit Log):
           </h3>
-          <p className="mt-2">
-            يمكن لمدير النظام فقط:
+          <p className="mt-2 text-sm text-slate-600">
+            لضمان الشفافية والمسؤولية، يقوم النظام بتسجيل جميع العمليات الحساسة (دخول، حذف، تعديل) في "سجل النشاطات" المتوفر في صفحة الإعدادات. يمكن للمسؤول مراجعة هذا السجل لمعرفة "من قام بماذا ومتى".
           </p>
+        </div>
+        <div className="mt-4 border-t pt-4">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2">
+            <Settings className="w-4 h-4" />
+            الصلاحيات:
+          </h3>
           <ul className="list-disc list-inside mt-2 text-sm text-slate-600">
             <li>إضافة مستخدمين جدد للنظام.</li>
             <li>تعديل صلاحيات المستخدمين (مدير، مستخدم عادي).</li>
-            <li>إجراء "إعادة ضبط المصنع" لحذف كافة البيانات والبدء من جديد.</li>
+            <li>إجراء "إعادة ضبط المصنع" لحذف كافة البيانات.</li>
           </ul>
         </div>
       </Section>
       
       <div className="text-center text-slate-400 text-sm py-6">
-        الإصدار 2.0 - جميع الحقوق محفوظة
+        الإصدار 2.1 - جميع الحقوق محفوظة
       </div>
     </div>
   );

@@ -1,16 +1,18 @@
 
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { DataService } from '../services/dataService';
-import { User, UserRole } from '../types';
-import { Trash2, Edit2, Shield, RefreshCw, Send, Save } from 'lucide-react';
+import { User, UserRole, LogEntry } from '../types';
+import { Trash2, Edit2, Shield, RefreshCw, Send, Save, Download, Upload, AlertTriangle, Activity, FileText } from 'lucide-react';
 import { TelegramService } from '../services/telegramService';
 
 export const Settings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'system' | 'telegram'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'system' | 'telegram' | 'logs'>('users');
   const [users, setUsers] = useState<User[]>(DataService.getUsers());
   const [editingId, setEditingId] = useState<number | null>(null);
   const [departments, setDepartments] = useState(DataService.getDepartments());
   const [telegramToken, setTelegramToken] = useState(DataService.getTelegramToken());
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   
   // New User Form State
   const [newUser, setNewUser] = useState({
@@ -19,6 +21,12 @@ export const Settings: React.FC = () => {
     role: UserRole.User,
     deptId: 1
   });
+
+  useEffect(() => {
+      if (activeTab === 'logs') {
+          setLogs(DataService.getLogs());
+      }
+  }, [activeTab]);
 
   const refreshUsers = () => {
     setUsers(DataService.getUsers());
@@ -73,6 +81,55 @@ export const Settings: React.FC = () => {
       else alert('فشل الإرسال. تأكد من التوكن ومعرف المحادثة وأن البوت مضاف للمجموعة.');
   };
 
+  const handleBackup = () => {
+    const data = DataService.exportFullSystem();
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `goaltrack_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+          try {
+              const json = JSON.parse(event.target?.result as string);
+              if (DataService.importFullSystem(json)) {
+                  alert('تم استعادة النسخة الاحتياطية بنجاح. سيتم إعادة تحميل النظام.');
+                  window.location.reload();
+              } else {
+                  alert('ملف النسخة الاحتياطية غير صالح.');
+              }
+          } catch (err) {
+              alert('حدث خطأ أثناء قراءة الملف. تأكد من اختيار ملف JSON صحيح.');
+          }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+  };
+
+  const exportLogs = () => {
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+        + ['التاريخ,المستخدم,الإجراء,التفاصيل'].join(',') + '\n'
+        + logs.map(l => `${l.timestamp},${l.userName},${l.action},${l.details}`).join('\n');
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.href = encodedUri;
+    link.download = "activity_logs.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-slate-800">إعدادات النظام</h1>
@@ -94,6 +151,15 @@ export const Settings: React.FC = () => {
           }`}
         >
           إعدادات تيليجرام
+        </button>
+        <button
+          onClick={() => setActiveTab('logs')}
+          className={`px-6 py-3 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-2 ${
+            activeTab === 'logs' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-slate-500'
+          }`}
+        >
+          <Activity className="w-4 h-4" />
+          سجل النشاطات
         </button>
         <button
           onClick={() => setActiveTab('system')}
@@ -219,6 +285,54 @@ export const Settings: React.FC = () => {
         </div>
       )}
 
+      {activeTab === 'logs' && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                  <div>
+                    <h3 className="font-bold text-slate-800">سجل النشاطات (Audit Log)</h3>
+                    <p className="text-xs text-slate-500">آخر العمليات التي تمت على النظام</p>
+                  </div>
+                  <button 
+                    onClick={exportLogs}
+                    className="flex items-center gap-2 px-3 py-1.5 text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50 text-xs font-bold"
+                  >
+                      <FileText className="w-3 h-3" />
+                      تصدير السجل
+                  </button>
+              </div>
+              <div className="overflow-x-auto max-h-[500px]">
+                  <table className="w-full text-sm text-right">
+                      <thead className="bg-slate-100 text-slate-600 sticky top-0">
+                          <tr>
+                              <th className="p-3 w-40">التاريخ / الوقت</th>
+                              <th className="p-3 w-40">المستخدم</th>
+                              <th className="p-3 w-40">الإجراء</th>
+                              <th className="p-3">التفاصيل</th>
+                          </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                          {logs.length > 0 ? logs.map(log => (
+                              <tr key={log.id} className="hover:bg-slate-50">
+                                  <td className="p-3 text-xs dir-ltr font-mono text-slate-500">
+                                      {new Date(log.timestamp).toLocaleString('en-US')}
+                                  </td>
+                                  <td className="p-3 font-medium text-slate-700">{log.userName}</td>
+                                  <td className="p-3">
+                                      <span className="bg-slate-100 px-2 py-1 rounded text-xs border border-slate-200">{log.action}</span>
+                                  </td>
+                                  <td className="p-3 text-slate-600">{log.details}</td>
+                              </tr>
+                          )) : (
+                              <tr>
+                                  <td colSpan={4} className="p-8 text-center text-slate-400">لا توجد سجلات محفوظة</td>
+                              </tr>
+                          )}
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+      )}
+
       {activeTab === 'telegram' && (
           <div className="space-y-6">
               <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
@@ -292,6 +406,49 @@ export const Settings: React.FC = () => {
 
       {activeTab === 'system' && (
           <div className="space-y-6">
+              {/* Backup & Restore Section */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                  <h3 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                      <RefreshCw className="w-5 h-5 text-green-600" />
+                      النسخ الاحتياطي واستعادة البيانات
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                          <h4 className="font-bold text-slate-800 mb-2">تصدير نسخة كاملة</h4>
+                          <p className="text-sm text-slate-500 mb-4">
+                              قم بتحميل ملف يحتوي على كافة بيانات النظام (المستخدمين، المهام، الإعدادات، السجلات) للاحتفاظ بها.
+                          </p>
+                          <button 
+                            onClick={handleBackup}
+                            className="w-full py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 flex items-center justify-center gap-2 shadow-sm"
+                          >
+                              <Download className="w-4 h-4" />
+                              تحميل النسخة الاحتياطية
+                          </button>
+                      </div>
+
+                      <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 relative">
+                          <h4 className="font-bold text-slate-800 mb-2">استعادة النظام</h4>
+                          <p className="text-sm text-slate-500 mb-4">
+                              استرجع البيانات من ملف نسخة احتياطية سابق. <span className="text-red-500 font-bold">سيتم استبدال البيانات الحالية.</span>
+                          </p>
+                          <div className="relative">
+                              <button className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 shadow-sm pointer-events-none">
+                                  <Upload className="w-4 h-4" />
+                                  رفع ملف النسخة الاحتياطية
+                              </button>
+                              <input 
+                                type="file" 
+                                accept=".json"
+                                onChange={handleRestore}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                              />
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              {/* Danger Zone */}
               <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                   <div className="flex items-center gap-4 text-red-600 mb-4">
                       <div className="p-3 bg-red-100 rounded-full">
@@ -304,17 +461,19 @@ export const Settings: React.FC = () => {
                   </div>
                   
                   <div className="border-t pt-4">
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center bg-red-50 p-4 rounded-lg border border-red-100">
                           <div>
-                              <h4 className="font-semibold text-slate-800">إعادة ضبط المصنع</h4>
-                              <p className="text-sm text-slate-500">حذف جميع البيانات المدخلة واستعادة البيانات الافتراضية</p>
+                              <h4 className="font-bold text-red-900 flex items-center gap-2">
+                                  <AlertTriangle className="w-4 h-4" />
+                                  إعادة ضبط المصنع
+                              </h4>
+                              <p className="text-sm text-red-700 mt-1">حذف جميع البيانات واستعادة الإعدادات الافتراضية</p>
                           </div>
                           <button 
                             onClick={handleResetSystem}
-                            className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                            className="px-4 py-2 bg-white text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors font-bold text-sm"
                           >
-                              <RefreshCw className="w-4 h-4 inline-block ml-2" />
-                              إعادة تعيين
+                              تنفيذ إعادة التعيين
                           </button>
                       </div>
                   </div>

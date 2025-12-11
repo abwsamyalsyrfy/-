@@ -1,7 +1,6 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListTodo, PlusCircle, Settings, LogOut, Menu, UploadCloud, BookOpen, FileText, BarChart2, X } from 'lucide-react';
+import { LayoutDashboard, ListTodo, PlusCircle, Settings, LogOut, Menu, UploadCloud, BookOpen, FileText, BarChart2, X, User as UserIcon } from 'lucide-react';
 import { Dashboard } from './components/Dashboard';
 import { TopicList } from './components/TopicList';
 import { TopicDetail } from './components/TopicDetail';
@@ -11,6 +10,9 @@ import { Settings as SettingsPage } from './components/Settings';
 import { UserGuide } from './components/UserGuide';
 import { DailyReport } from './components/DailyReport';
 import { PerformanceAnalysis } from './components/PerformanceAnalysis';
+import { Login } from './components/Login';
+import { DataService } from './services/dataService';
+import { User } from './types';
 
 const SidebarLink = ({ to, icon: Icon, label, onClick }: any) => {
   const location = useLocation();
@@ -33,10 +35,31 @@ const SidebarLink = ({ to, icon: Icon, label, onClick }: any) => {
 };
 
 export default function App() {
+  // Initialize state directly from DataService to avoid login flash on refresh
+  const [user, setUser] = useState<User | null>(() => {
+    return DataService.isAuthenticated() ? DataService.getCurrentUser() : null;
+  });
+  
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleLogin = () => {
+    setUser(DataService.getCurrentUser());
+  };
+
+  const handleLogout = () => {
+    DataService.logout();
+    setUser(null);
+  };
 
   const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMenu = () => setIsMobileMenuOpen(false);
+
+  // If not logged in, show Login Screen
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  const deptName = DataService.getDepartments().find(d => d.id === user.deptId)?.name || 'غير محدد';
 
   const SidebarContent = () => (
     <>
@@ -47,7 +70,6 @@ export default function App() {
           </div>
           <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">GoalTrack</h1>
         </div>
-        {/* Close button only visible on mobile inside the drawer */}
         <button onClick={closeMenu} className="md:hidden p-1 text-slate-500 hover:bg-slate-100 rounded-full">
           <X className="w-6 h-6" />
         </button>
@@ -65,17 +87,20 @@ export default function App() {
       </nav>
 
       <div className="p-4 border-t border-slate-100">
-        <button className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-red-600 w-full transition-colors">
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-red-600 w-full transition-colors rounded-lg hover:bg-red-50"
+        >
           <LogOut className="w-5 h-5" />
           <span>تسجيل خروج</span>
         </button>
-        <div className="mt-4 flex items-center gap-3 px-4">
-            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold">
-                م
+        <div className="mt-4 flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-blue-600 font-bold shadow-sm">
+                <UserIcon className="w-5 h-5" />
             </div>
-            <div>
-                <p className="text-sm font-semibold text-slate-700">مدير النظام</p>
-                <p className="text-xs text-slate-400">الإدارة العامة</p>
+            <div className="overflow-hidden">
+                <p className="text-sm font-bold text-slate-700 truncate" title={user.name}>{user.name}</p>
+                <p className="text-xs text-slate-500 truncate" title={deptName}>{deptName}</p>
             </div>
         </div>
       </div>

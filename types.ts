@@ -1,4 +1,5 @@
 
+
 export enum TopicStatus {
   Pending = 'قيد المتابعة',
   Closed = 'مغلقة',
@@ -74,4 +75,13 @@ export interface Attachment {
   fileType: string;
   uploadDate: string;
   uploadedBy: number;
+}
+
+export interface LogEntry {
+  id: string;
+  action: string;
+  userId: number;
+  userName: string;
+  details: string;
+  timestamp: string;
 }

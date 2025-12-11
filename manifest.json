@@ -1,0 +1,16 @@
+{
+  "name": "GoalTrack Pro",
+  "short_name": "GoalTrack",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/9320/9320857.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
