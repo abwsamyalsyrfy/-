@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 import { AlertCircle, CheckCircle2, Clock, FileText, Download, TrendingUp, Activity } from 'lucide-react';
@@ -13,17 +12,19 @@ export const Dashboard: React.FC = () => {
   const dashboardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  const stats = DataService.getStats();
-  const overdueTopics = DataService.getOverdueTopics();
-  const topics = DataService.getTopics();
-  const departments = DataService.getDepartments();
+  const stats = useMemo(() => DataService.getStats(), []);
+  const overdueTopics = useMemo(() => DataService.getOverdueTopics(), []);
+  const topics = useMemo(() => DataService.getTopics(), []);
+  const departments = useMemo(() => DataService.getDepartments(), []);
 
-  const statusCounts = topics.reduce((acc, topic) => {
-    acc[topic.status] = (acc[topic.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const statusCounts = useMemo(() => {
+    return topics.reduce((acc, topic) => {
+      acc[topic.status] = (acc[topic.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [topics]);
 
-  const pieData = [
+  const pieData = useMemo(() => [
     { name: TopicStatus.Closed, value: statusCounts[TopicStatus.Closed] || 0, color: '#22c55e' },
     { name: TopicStatus.Ongoing, value: statusCounts[TopicStatus.Ongoing] || 0, color: '#3b82f6' },
     { name: TopicStatus.Pending, value: statusCounts[TopicStatus.Pending] || 0, color: '#0ea5e9' },
@@ -32,9 +33,9 @@ export const Dashboard: React.FC = () => {
     { name: TopicStatus.Postponed, value: statusCounts[TopicStatus.Postponed] || 0, color: '#f97316' },
     { name: TopicStatus.Stalled, value: statusCounts[TopicStatus.Stalled] || 0, color: '#78716c' },
     { name: TopicStatus.Cancelled, value: statusCounts[TopicStatus.Cancelled] || 0, color: '#64748b' },
-  ].filter(item => item.value > 0);
+  ].filter(item => item.value > 0), [statusCounts]);
 
-  const deptPerformance = departments.map(dept => {
+  const deptPerformance = useMemo(() => departments.map(dept => {
     const deptTopics = topics.filter(t => t.deptId === dept.id);
     const total = deptTopics.length;
     const completed = deptTopics.filter(t => t.status === TopicStatus.Closed).length;
@@ -44,7 +45,7 @@ export const Dashboard: React.FC = () => {
       completed: completed,
       pending: total - completed
     };
-  }).filter(d => d.total > 0);
+  }).filter(d => d.total > 0), [departments, topics]);
 
   const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 

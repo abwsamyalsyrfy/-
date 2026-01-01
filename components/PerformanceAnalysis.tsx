@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo } from 'react';
 import { DataService } from '../services/dataService';
 import { 
@@ -25,8 +24,8 @@ export const PerformanceAnalysis: React.FC = () => {
   const generalReportRef = useRef<HTMLDivElement>(null);
   const deptReportRef = useRef<HTMLDivElement>(null);
 
-  const topics = DataService.getTopics();
-  const departments = DataService.getDepartments();
+  const topics = useMemo(() => DataService.getTopics(), []);
+  const departments = useMemo(() => DataService.getDepartments(), []);
 
   // --- Statistics Logic ---
   const analytics = useMemo(() => {
@@ -214,7 +213,7 @@ export const PerformanceAnalysis: React.FC = () => {
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                     <XAxis dataKey="name" fontSize={12} fontWeight={700} stroke="#475569" />
                                     <YAxis fontSize={12} fontWeight={700} stroke="#475569" />
-                                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', textAlign: 'right', fontFamily: 'Sakkal Majalla' }} />
+                                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', textAlign: 'right', fontFamily: 'Tajawal' }} />
                                     <Legend verticalAlign="top" height={36} />
                                     <Bar name="الإجمالي" dataKey="total" fill="#cbd5e1" radius={[4, 4, 0, 0]} barSize={20} />
                                     <Bar name="منجز" dataKey="closed" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />

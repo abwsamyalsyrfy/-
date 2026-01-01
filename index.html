@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest.json">
-    <title>GoalTrack Pro</title>
+    <title>GoalTrack Pro | نظام متابعة الأهداف</title>
     
     <!-- تحميل خط تجوال من جوجل لضمان الظهور بشكل صحيح واحترافي -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,15 +20,13 @@
       body {
         font-family: 'Tajawal', sans-serif;
         background-color: #f3f4f6;
-        font-size: 16px; /* حجم قياسي مريح للعين مع خط تجوال */
+        font-size: 16px;
       }
       
-      /* تحسين العناوين */
       h1, h2, h3, h4, h5, h6 {
-        font-weight: 800; /* خط سميك للعناوين */
+        font-weight: 800;
       }
 
-      /* تحسين جداول البيانات */
       th {
         font-weight: 800 !important;
         font-size: 15px;
@@ -38,12 +36,10 @@
         font-size: 15px;
       }
       
-      /* تحسين الأزرار */
       button {
         font-weight: 700;
       }
       
-      /* Scrollbar Styling */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
@@ -62,21 +58,24 @@
   <script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "react": "https://aistudiocdn.com/react@^19.2.1",
-    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.1",
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "react-router-dom": "https://esm.sh/react-router-dom@7.1.5?external=react,react-dom",
+    "lucide-react": "https://esm.sh/lucide-react@0.475.0?external=react",
+    "recharts": "https://esm.sh/recharts@2.15.0?external=react,react-dom",
+    "reselect": "https://esm.sh/reselect@5.1.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs",
-    "html2canvas": "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm",
-    "jspdf": "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm"
+    "html2canvas": "https://esm.sh/html2canvas@1.4.1",
+    "jspdf": "https://esm.sh/jspdf@2.5.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="index.tsx"></script>
   </body>
 </html>

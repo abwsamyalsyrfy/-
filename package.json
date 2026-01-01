@@ -9,11 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "lucide-react": "^0.555.0",
-    "react-dom": "^19.2.1",
-    "recharts": "^3.5.1",
-    "react": "^19.2.1",
-    "react-router-dom": "^7.10.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-router-dom": "7.1.5",
+    "lucide-react": "0.475.0",
+    "recharts": "2.15.0",
+    "reselect": "5.1.1",
     "xlsx": "latest",
     "html2canvas": "1.4.1",
     "jspdf": "2.5.1"
